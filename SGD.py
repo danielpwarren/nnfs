@@ -1,8 +1,8 @@
 from nnfs import activations, datasets, layers, loss, optimizers
-import wandb
 import numpy as np
 
-run = wandb.init(project="nnfs", name="sgd")
+import wandb
+run = wandb.init(project="nnfs", name="sgd-momentum")
 
 X, y = datasets.spiral_data(samples=100, classes=3)
 
@@ -11,7 +11,7 @@ activation1 = activations.ReLU()
 dense2 = layers.Dense(64, 3)
 loss_activation = loss.SoftmaxCategoricalCrossEntropy()
 
-optimizer = optimizers.SGD(learning_rate=1.0, decay_rate=1e-3)
+optimizer = optimizers.SGD(learning_rate=1.0, decay_rate=1e-3, momentum=0.5)
 
 # Training loop
 
@@ -27,9 +27,10 @@ for epoch in range(10001):
     accuracy = np.mean(predictions == y)
 
     if not epoch % 10:
-        run.log({"accuracy": accuracy, "loss": l, "lr": optimizer.current_learning_rate})
+        run.log({"accuracy": accuracy, "loss": l,
+                 "lr": optimizer.current_learning_rate})
         print(f'epoch: {epoch}, ' +
-              f'acc: {accuracy:.3f}, ' + 
+              f'acc: {accuracy:.3f}, ' +
               f'loss: {l:.3f} ' +
               f'lr: {optimizer.current_learning_rate}')
 
