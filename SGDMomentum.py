@@ -2,7 +2,7 @@ from nnfs import activations, datasets, layers, loss, optimizers
 import numpy as np
 
 import wandb
-run = wandb.init(project="nnfs", name="adagrad")
+run = wandb.init(project="nnfs", name="sgd-momentum")
 
 def validate(run):
     X_test, y_test = datasets.spiral_data(samples=100, classes=3)
@@ -19,6 +19,7 @@ def validate(run):
     run.log({"validation_acc": accuracy, "validation_loss": validation_loss}, step=epoch)
     print(f'validation, acc: {accuracy:.3f}, loss: {validation_loss:.3f}')
 
+
 X, y = datasets.spiral_data(samples=100, classes=3)
 
 dense1 = layers.Dense(2, 64)
@@ -26,7 +27,7 @@ activation1 = activations.ReLU()
 dense2 = layers.Dense(64, 3)
 loss_activation = loss.SoftmaxCategoricalCrossEntropy()
 
-optimizer = optimizers.AdaGrad(learning_rate=1.0, decay_rate=1e-4, epsilon=0.7)
+optimizer = optimizers.SGD(learning_rate=1.0, decay_rate=1e-3, momentum=0.5)
 
 # Training loop
 for epoch in range(10001):
@@ -40,10 +41,9 @@ for epoch in range(10001):
         y = np.argmax(y, axis=1)
     accuracy = np.mean(predictions == y)
 
-    run.log({"accuracy": accuracy, "loss": l,
-                "lr": optimizer.current_learning_rate}, step=epoch)
-    if not epoch % 100:
-        validate(run)
+    if not epoch % 10:
+        run.log({"accuracy": accuracy, "loss": l,
+                 "lr": optimizer.current_learning_rate})
         print(f'epoch: {epoch}, ' +
               f'acc: {accuracy:.3f}, ' +
               f'loss: {l:.3f} ' +

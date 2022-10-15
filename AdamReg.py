@@ -2,7 +2,7 @@ from nnfs import activations, datasets, layers, loss, optimizers
 import numpy as np
 
 import wandb
-run = wandb.init(project="nnfs", name="adagrad")
+run = wandb.init(project="nnfs", name="adam-with-reg")
 
 def validate(run):
     X_test, y_test = datasets.spiral_data(samples=100, classes=3)
@@ -21,34 +21,45 @@ def validate(run):
 
 X, y = datasets.spiral_data(samples=100, classes=3)
 
-dense1 = layers.Dense(2, 64)
+dense1 = layers.Dense(2, 64,
+                      weight_regularizer_l2=5e-4,
+                      bias_regularizer_l2=5e-4)
 activation1 = activations.ReLU()
 dense2 = layers.Dense(64, 3)
 loss_activation = loss.SoftmaxCategoricalCrossEntropy()
 
-optimizer = optimizers.AdaGrad(learning_rate=1.0, decay_rate=1e-4, epsilon=0.7)
+optimizer = optimizers.Adam(learning_rate=0.02, decay=5e-7)
 
 # Training loop
 for epoch in range(10001):
     dense1.forward(X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
-    l = loss_activation.forward(dense2.output, y)
+
+    data_loss = loss_activation.forward(dense2.output, y)
+    regularization_loss = \
+        loss_activation.loss.regularization_loss(dense1) + \
+        loss_activation.loss.regularization_loss(dense2)
+
+    loss_value = data_loss + regularization_loss
 
     predictions = np.argmax(loss_activation.output, axis=1)
     if len(y.shape) == 2:
         y = np.argmax(y, axis=1)
     accuracy = np.mean(predictions == y)
-
-    run.log({"accuracy": accuracy, "loss": l,
+    
+    run.log({"accuracy": accuracy, "loss": loss_value,
+                "data_loss": data_loss, "reg_loss": regularization_loss,
                 "lr": optimizer.current_learning_rate}, step=epoch)
     if not epoch % 100:
         validate(run)
         print(f'epoch: {epoch}, ' +
               f'acc: {accuracy:.3f}, ' +
-              f'loss: {l:.3f} ' +
+              f'loss: {loss_value:.3f} ' +
+              f'data_loss: {data_loss:.3f} ' +
+              f'reg_loss: {regularization_loss:.3f} ' +
               f'lr: {optimizer.current_learning_rate:.3f}')
-
+    
     loss_activation.backward(loss_activation.output, y)
     dense2.backward(loss_activation.dinputs)
     activation1.backward(dense2.dinputs)
