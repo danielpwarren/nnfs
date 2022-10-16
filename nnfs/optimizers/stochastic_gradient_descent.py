@@ -2,6 +2,7 @@ import numpy as np
 
 
 class SGD:
+    
     def __init__(self, learning_rate=1.0, decay_rate=0.0, momentum=0.0):
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate

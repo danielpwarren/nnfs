@@ -4,6 +4,7 @@ from ..activations import Softmax
 
 
 class CategoricalCrossEntropy(Loss):
+    
     def forward(self, y_pred, y_true):
         samples = len(y_true)
 

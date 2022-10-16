@@ -2,7 +2,6 @@ import numpy as np
 
 
 class Adam:
-
     # Initialize optimizer - set settings
     def __init__(self, learning_rate=0.001, decay=0.0, epsilon=1e-7, beta_1=0.9, beta_2=0.999):
         self.learning_rate = learning_rate
